@@ -32,7 +32,7 @@ def armstrong(number: int):
     if number < 0:
         return {
             "is_armstrong": False,
-            "digit_sum": "N/A"
+            "digit_sum": sum([int(digit) for digit in str(abs(number))])
         }  
     
     digits = [int(digit) for digit in str(number)]
@@ -48,7 +48,7 @@ def classify_number(number: str = Query(None)):
     # Check if the "number" query parameter is missing in the url
     if number is None:
         return JSONResponse(
-            content={"number": "alphabet", "error": True},
+            content={"number": None, "error": True},
             status_code=status.HTTP_400_BAD_REQUEST
         )
     
@@ -57,14 +57,7 @@ def classify_number(number: str = Query(None)):
         num = int(number)
     except ValueError:
         return JSONResponse(
-            content={"number": "alphabet", "error": True},
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
-
-    # Handle numbers that are negative explicitly
-    if num < 0:
-        return JSONResponse(
-            content={"number": "alphabet", "error": True},
+            content={"number": number, "error": True},
             status_code=status.HTTP_400_BAD_REQUEST
         )
 
