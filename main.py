@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import requests
@@ -37,31 +37,27 @@ def armstrong(number: int):
         "digit_sum": sum(digits)
     }
 
+def error_response():
+    """Returns a JSON error response for missing or invalid input."""
+    return JSONResponse(
+        content={"number": "alphabet", "error": True},
+        status_code=status.HTTP_400_BAD_REQUEST
+    )
+
 @app.get("/classify-number")
-def classify_number(number: str):
-    # Check if the input is a valid integer
+def classify_number(number: str = Query(None)):
+    if number is None:
+        return error_response()
+    
     try:
         num = int(number)
     except ValueError:
-        return JSONResponse(
-            content={"number": number, "error": True},
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
+        return error_response()
     
     armstrong_result = armstrong(num)
-    number_properties = []
+    number_properties = ["armstrong"] if armstrong_result["is_armstrong"] else []
+    number_properties.append("odd" if num % 2 != 0 else "even")
 
-    # Determine properties based on Armstrong number and odd/even
-    if armstrong_result["is_armstrong"]:
-        number_properties.append("armstrong")
-    
-    if num % 2 != 0:
-        number_properties.append("odd")
-    else:
-        number_properties.append("even")
-    
-  
-    # Fetch Fun Fact from Numbers API
     try:
         response = requests.get(f'http://numbersapi.com/{num}?json')
         response.raise_for_status()
@@ -69,12 +65,11 @@ def classify_number(number: str):
     except requests.exceptions.RequestException:
         fun_fact = f"No fun fact available for {num}"
 
-    # Structuring the successful response in the specified format
     return JSONResponse(
         content={
             "number": num,
             "is_prime": is_prime(num),
-            "is_perfect": is_perfect(num),  # Added the is_perfect field
+            "is_perfect": is_perfect(num),
             "properties": number_properties,
             "digit_sum": armstrong_result["digit_sum"],
             "fun_fact": fun_fact
