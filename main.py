@@ -1,11 +1,14 @@
-from fastapi import FastAPI, Query, status
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import requests
+import boto3
+from twilio.rest import Client
+from datetime import datetime, timedelta
+import asyncio
 
 app = FastAPI()
 
-# CORs to make it public
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,82 +17,82 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def is_prime(n: int) -> bool:
-    if n < 2:
-        return False
-    for i in range(2, int(n ** 0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
+# Twilio Credentials
+TWILIO_ACCOUNT_SID = "AC973b9c10c57b2bb916a225292a2ca5ef"
+TWILIO_AUTH_TOKEN = "2e117115680854c9d1ad3ecbb3da4477"
+TWILIO_PHONE_NUMBER = "+12344234914"
+#ALERT_PHONE_NUMBER = '+2348149650354'
 
-def is_perfect(n: int) -> bool:
-    if n < 2:
-        return False
-    divisors = [i for i in range(1, n) if n % i == 0]
-    return sum(divisors) == n
+twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-def armstrong(number: int):
-    if number < 0:
-        return {
-            "is_armstrong": False,
-            "digit_sum": sum([int(digit) for digit in str(abs(number))])
-        }  
-    
-    digits = [int(digit) for digit in str(number)]
-    total_num_of_digits = len(digits)
-    armstrong_sum = sum(digit ** total_num_of_digits for digit in digits)
-    return {
-        "is_armstrong": armstrong_sum == number,
-        "digit_sum": sum(digits)
-    }
-
-@app.get("/classify-number")
-def classify_number(number: str = Query(None)):
-    # Check if the "number" query parameter is missing in the url
-    if number is None:
-        return JSONResponse(
-            content={"number": None, "error": True},
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
-    
-    # Checking if the input is a valid integer
+# Async function to send SMS alert
+async def send_sms_alert(to_phone_number: str, message_body: str):
+    loop = asyncio.get_event_loop()
     try:
-        num = int(number)
-    except ValueError:
-        return JSONResponse(
-            content={"number": number, "error": True},
-            status_code=status.HTTP_400_BAD_REQUEST
+        message = await loop.run_in_executor(
+            None, 
+            lambda: twilio_client.messages.create(
+                body=message_body,
+                from_=TWILIO_PHONE_NUMBER,
+                to=to_phone_number
+            )
+        )
+        return {"sid": message.sid, "status": message.status}
+    except Exception as e:
+        return {"error": str(e)}
+
+# Function to assume AWS IAM role
+def assume_role(account_id: str, role_name: str):
+    try:
+        sts_client = boto3.client('sts')
+        role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
+        response = sts_client.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName="CloudWatchAccessSession"
+        )
+        return response['Credentials']
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error assuming role: {str(e)}")
+
+@app.get("/check_cpu/{account_id}/{role_name}/{instance_id}/{phone_number}")
+async def check_cpu(account_id: str, role_name: str, instance_id: str,phone_number:str):
+    """
+    Get CPU usage for the given EC2 instance and send an SMS alert if usage exceeds 85%.
+    """
+    try:
+        credentials = assume_role(account_id, role_name)
+        cloudwatch_client = boto3.client(
+            'cloudwatch',
+            aws_access_key_id=credentials['AccessKeyId'],
+            aws_secret_access_key=credentials['SecretAccessKey'],
+            aws_session_token=credentials['SessionToken']
         )
 
-    armstrong_result = armstrong(num)
-    number_properties = []
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(minutes=5)
 
-    # Determine number_properties based on Armstrong number and odd/even
-    if armstrong_result["is_armstrong"]:
-        number_properties.append("armstrong")
-    
-    if num % 2 != 0:
-        number_properties.append("odd")
-    else:
-        number_properties.append("even")
-    
-    # Fetch Fun Fact from Numbers API
-    try:
-        response = requests.get(f'http://numbersapi.com/{num}?json')
-        response.raise_for_status()
-        fun_fact = response.json().get('text', f"No fun fact available for {num}")
-    except requests.exceptions.RequestException:
-        fun_fact = f"No fun fact available for {num}"
+        response = cloudwatch_client.get_metric_statistics(
+            Period=300,
+            StartTime=start_time.isoformat(),
+            EndTime=end_time.isoformat(),
+            MetricName='CPUUtilization',
+            Namespace='AWS/EC2',
+            Statistics=['Average'],
+            Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}]
+        )
 
-    # Successful response in the specified format
-    return JSONResponse(
-        content={
-            "number": num,
-            "is_prime": is_prime(num),
-            "is_perfect": is_perfect(num),
-            "properties": number_properties,
-            "digit_sum": armstrong_result["digit_sum"],
-            "fun_fact": fun_fact
-        },
-        status_code=status.HTTP_200_OK
-    )
+        if 'Datapoints' in response and response['Datapoints']:
+            cpu_usage = response['Datapoints'][0]['Average']
+            alert_sent = False
+            
+            if cpu_usage >= 85:
+                message_body = f"ALERT: CPU usage for instance {instance_id} is {cpu_usage}%."
+                await send_sms_alert(phone_number, message_body)
+                alert_sent = True
+
+            return {"cpu_usage": cpu_usage, "alert_sent": alert_sent}
+        else:
+            return {"cpu_usage": 0, "alert_sent": False}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving CPU usage: {str(e)}")
