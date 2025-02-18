@@ -2,54 +2,59 @@
 
 ## Overview
 
-This API monitors the CPU usage of an AWS EC2 instance and provides real-time metrics. It helps in tracking resource utilization and detecting anomalies that might indicate performance issues. The API collects CPU usage statistics and can be integrated into monitoring dashboards or alerting systems.
+This API monitors the CPU usage of an AWS EC2 instance using CloudWatch and sends an SMS alert via Twilio if the usage exceeds a defined threshold (85%). It assumes an AWS IAM role to retrieve CloudWatch metrics and triggers alerts when necessary.
 
 ## Features
 
-- **Real-time CPU Monitoring**: Fetches the current CPU usage of an EC2 instance.
-- **Historical Data Retrieval**: Allows users to retrieve CPU usage trends over a period.
-- **Threshold-Based Alerts**: Sends alerts if CPU usage exceeds a predefined threshold.
-- **CORS Handling**: Supports Cross-Origin Resource Sharing (CORS) for accessibility from different domains.
+- **EC2 CPU Usage Monitoring**: Retrieves the average CPU utilization of an EC2 instance.
+- **AWS IAM Role Assumption**: Uses STS to assume a role for accessing CloudWatch.
+- **Twilio SMS Alerts**: Sends SMS notifications if CPU usage exceeds 85%.
+- **CORS Handling**: Supports Cross-Origin Resource Sharing (CORS) to allow requests from any domain.
 
 ## Technology Stack
 
-- **FastAPI**: Web framework for building APIs.
-- **Python**: Programming language.
-- **Boto3**: AWS SDK for Python to interact with EC2 CloudWatch metrics.
-- **Uvicorn**: ASGI server for running the API.
+- **FastAPI**: Web framework for building the API.
+- **AWS CloudWatch**: Fetches EC2 instance CPU metrics.
+- **AWS STS**: Assumes IAM roles for cross-account access.
+- **Twilio API**: Sends SMS alerts.
+- **Python**: Primary programming language.
 
-## API Endpoints
+## API Endpoint
 
-### **1. Get Current CPU Usage**
-**GET /api/cpu-usage**
+### **GET /check_cpu/{account_id}/{role_name}/{instance_id}/{phone_number}**
 
-#### Response Format (200 OK)
+Retrieves the CPU usage of a specified EC2 instance and sends an SMS alert if the usage exceeds 85%.
+
+#### **Path Parameters**
+
+| Parameter      | Type   | Description                                |
+|--------------|--------|--------------------------------------------|
+| account_id   | string | AWS account ID where the EC2 instance resides. |
+| role_name    | string | IAM role name with permissions to access CloudWatch. |
+| instance_id  | string | The EC2 instance ID to monitor. |
+| phone_number | string | The phone number to receive the SMS alert. |
+
+#### **Response Format (200 OK)**
+
 ```json
 {
-  "instance_id": "i-0abcd1234efgh5678",
-  "cpu_usage": 42.5,
-  "timestamp": "2025-02-18T12:30:00Z"
+  "cpu_usage": 72.5,
+  "alert_sent": false
 }
 ```
 
-#### Response Format (400 Bad Request)
 ```json
 {
-  "error": "Invalid request parameters"
+  "cpu_usage": 87.9,
+  "alert_sent": true
 }
 ```
 
-### **2. Get CPU Usage History**
-**GET /api/cpu-usage-history?start_time=YYYY-MM-DDTHH:MM:SSZ&end_time=YYYY-MM-DDTHH:MM:SSZ**
+#### **Response Format (500 Internal Server Error)**
 
-#### Response Format (200 OK)
 ```json
 {
-  "instance_id": "i-0abcd1234efgh5678",
-  "cpu_usage_history": [
-    { "timestamp": "2025-02-18T12:00:00Z", "cpu_usage": 35.2 },
-    { "timestamp": "2025-02-18T12:10:00Z", "cpu_usage": 38.6 }
-  ]
+  "detail": "Error retrieving CPU usage: <error message>"
 }
 ```
 
@@ -57,62 +62,49 @@ This API monitors the CPU usage of an AWS EC2 instance and provides real-time me
 
 ### **Requirements**
 - Python 3.7 or higher
-- AWS credentials configured for accessing EC2 metrics
-- pip for installing Python dependencies
+- AWS account with CloudWatch permissions
+- Twilio account for SMS notifications
 
 ### **Install Dependencies**
+
 Clone the repository:
-```sh
+
+```bash
 git clone https://github.com/Oguntayo/hng12-stage3-ec2-cpu_usage-monitoring.git
 cd hng12-stage3-ec2-cpu_usage-monitoring
 ```
-Install the required Python dependencies:
-```sh
+
+Install the required dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
 ### **Run Locally**
-To run the API locally, use Uvicorn:
-```sh
+
+To start the API locally, use Uvicorn:
+
+```bash
 uvicorn main:app --reload
 ```
-The API will be running on http://127.0.0.1:8000.
 
-You can access it by visiting the following URL:
-```sh
-http://127.0.0.1:8000/api/cpu-usage
-```
+The API will be running on **http://127.0.0.1:8000**.
 
-### **Test the API Locally**
-You can test the API using any HTTP client like Postman or cURL:
-```sh
-curl "http://127.0.0.1:8000/api/cpu-usage"
+Example request:
+
+```bash
+curl "http://127.0.0.1:8000/check_cpu/123456789012/MyRole/i-0abcd1234ef567890/+1234567890"
 ```
 
-### **Access the Endpoint Online**
-The API is deployed and accessible via the following public URL:
-```
-https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/
-```
+### **Deployment**
 
-### **Example Request**
-To get CPU usage, make a GET request to:
-```
-https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/api/cpu-usage
-```
+To deploy the API, you can use AWS EC2, AWS Lambda, or a hosting service like Render or Heroku.
 
-### **Example Response**
-```json
-{
-  "instance_id": "i-0abcd1234efgh5678",
-  "cpu_usage": 42.5,
-  "timestamp": "2025-02-18T12:30:00Z"
-}
-```
+---
 
 ## Notes
-- The API retrieves CPU usage data from AWS CloudWatch.
-- Ensure your AWS credentials are correctly configured to access EC2 metrics.
-- The API returns a 400 Bad Request response if invalid parameters are provided.
-- This API is useful for cloud monitoring and automated alerting systems.
+- Ensure the AWS IAM role has permissions to read CloudWatch metrics.
+- The API handles errors and returns appropriate HTTP status codes.
+- The CPU alert threshold is set at 85% but can be modified in the source code.
+- Twilio credentials must be set correctly to send SMS alerts.
 
