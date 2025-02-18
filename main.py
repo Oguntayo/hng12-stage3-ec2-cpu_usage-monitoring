@@ -54,7 +54,8 @@ def assume_role(account_id: str, role_name: str):
         sts_client = boto3.client(
     'sts',
     aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
 )
         role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
         response = sts_client.assume_role(
