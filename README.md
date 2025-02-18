@@ -1,99 +1,118 @@
-# Number Classification API
+# EC2 CPU Usage Monitoring API
 
 ## Overview
 
-This is a simple API that takes a number as input and returns interesting mathematical properties about the number, along with a fun fact. The API calculates whether the number is prime, perfect, Armstrong, and provides the sum of its digits. Additionally, the API fetches a fun fact about the number from the Numbers API.
+This API monitors the CPU usage of an AWS EC2 instance and provides real-time metrics. It helps in tracking resource utilization and detecting anomalies that might indicate performance issues. The API collects CPU usage statistics and can be integrated into monitoring dashboards or alerting systems.
 
 ## Features
 
-- **Prime Number Check**: Determines if the number is prime.
-- **Perfect Number Check**: Determines if the number is a perfect number.
-- **Armstrong Number Check**: Determines if the number is an Armstrong number.
-- **Fun Fact**: Fetches a fun fact about the number from the Numbers API.
-- **CORS Handling**: The API supports Cross-Origin Resource Sharing (CORS), so it can be accessed from any domain.
+- **Real-time CPU Monitoring**: Fetches the current CPU usage of an EC2 instance.
+- **Historical Data Retrieval**: Allows users to retrieve CPU usage trends over a period.
+- **Threshold-Based Alerts**: Sends alerts if CPU usage exceeds a predefined threshold.
+- **CORS Handling**: Supports Cross-Origin Resource Sharing (CORS) for accessibility from different domains.
 
 ## Technology Stack
 
 - **FastAPI**: Web framework for building APIs.
 - **Python**: Programming language.
-- **Numbers API**: Provides fun facts about numbers.
+- **Boto3**: AWS SDK for Python to interact with EC2 CloudWatch metrics.
+- **Uvicorn**: ASGI server for running the API.
 
-## API Endpoint
+## API Endpoints
 
-The API exposes the following endpoint:
+### **1. Get Current CPU Usage**
+**GET /api/cpu-usage**
 
-GET /api/classify-number?number=<number>
-
-### Response Format (200 OK)
-
-
+#### Response Format (200 OK)
+```json
 {
-  "number": 371,
-  "is_prime": false,
-  "is_perfect": false,
-  "properties": ["armstrong", "odd"],
-  "digit_sum": 11,
-  "fun_fact": "371 is an Armstrong number because 3^3 + 7^3 + 1^3 = 371"
+  "instance_id": "i-0abcd1234efgh5678",
+  "cpu_usage": 42.5,
+  "timestamp": "2025-02-18T12:30:00Z"
 }
-Response Format (400 Bad Request)
+```
 
+#### Response Format (400 Bad Request)
+```json
 {
-  "number": "alphabet",
-  "error": true
+  "error": "Invalid request parameters"
 }
+```
 
-Setup Instructions
-Requirements
-Python 3.7 or higher.
-pip for installing Python dependencies.
-Install Dependencies
+### **2. Get CPU Usage History**
+**GET /api/cpu-usage-history?start_time=YYYY-MM-DDTHH:MM:SSZ&end_time=YYYY-MM-DDTHH:MM:SSZ**
+
+#### Response Format (200 OK)
+```json
+{
+  "instance_id": "i-0abcd1234efgh5678",
+  "cpu_usage_history": [
+    { "timestamp": "2025-02-18T12:00:00Z", "cpu_usage": 35.2 },
+    { "timestamp": "2025-02-18T12:10:00Z", "cpu_usage": 38.6 }
+  ]
+}
+```
+
+## Setup Instructions
+
+### **Requirements**
+- Python 3.7 or higher
+- AWS credentials configured for accessing EC2 metrics
+- pip for installing Python dependencies
+
+### **Install Dependencies**
 Clone the repository:
-
-git clone https://github.com/Oguntayo/hng12-stage1-number-classification-api.git
-cd hng12-stage1-number-classification-api
+```sh
+git clone https://github.com/Oguntayo/hng12-stage3-ec2-cpu_usage-monitoring.git
+cd hng12-stage3-ec2-cpu_usage-monitoring
+```
 Install the required Python dependencies:
-
-
+```sh
 pip install -r requirements.txt
-Run Locally
+```
+
+### **Run Locally**
 To run the API locally, use Uvicorn:
-
-Run the app:
-
-
+```sh
 uvicorn main:app --reload
+```
 The API will be running on http://127.0.0.1:8000.
 
 You can access it by visiting the following URL:
+```sh
+http://127.0.0.1:8000/api/cpu-usage
+```
 
+### **Test the API Locally**
+You can test the API using any HTTP client like Postman or cURL:
+```sh
+curl "http://127.0.0.1:8000/api/cpu-usage"
+```
 
-http://127.0.0.1:8000/api/classify-number?number=371
-Test the API Locally
-You can test the API locally using any HTTP client like Postman or cURL. Here's how you can make a request using cURL:
-
-
-curl "http://127.0.0.1:8000/api/classify-number?number=371"
-Access the Endpoint Online
+### **Access the Endpoint Online**
 The API is deployed and accessible via the following public URL:
+```
+https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/
+```
 
-https://hng12-stage1-number-classification-api.onrender.com/
+### **Example Request**
+To get CPU usage, make a GET request to:
+```
+https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/api/cpu-usage
+```
 
-Example Request
-To classify the number 371, make a GET request to:
-
-https://hng12-stage1-number-classification-api.onrender.com/classify-number?number=371
-Example Response
-
+### **Example Response**
+```json
 {
-  "number": 371,
-  "is_prime": false,
-  "is_perfect": false,
-  "properties": ["armstrong", "odd"],
-  "digit_sum": 11,
-  "fun_fact": "371 is an Armstrong number because 3^3 + 7^3 + 1^3 = 371"
+  "instance_id": "i-0abcd1234efgh5678",
+  "cpu_usage": 42.5,
+  "timestamp": "2025-02-18T12:30:00Z"
 }
+```
 
+## Notes
+- The API retrieves CPU usage data from AWS CloudWatch.
+- Ensure your AWS credentials are correctly configured to access EC2 metrics.
+- The API returns a 400 Bad Request response if invalid parameters are provided.
+- This API is useful for cloud monitoring and automated alerting systems.
 
-Notes
-The API checks for errors in the input (i.e., non-integer values) and returns a 400 Bad Request response if invalid data is provided.
-The Numbers API is used to fetch fun facts about the number.
