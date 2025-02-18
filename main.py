@@ -5,7 +5,7 @@ import boto3
 from twilio.rest import Client
 from datetime import datetime, timedelta
 import asyncio
-
+import os
 app = FastAPI()
 
 # CORS Configuration
@@ -41,10 +41,21 @@ async def send_sms_alert(to_phone_number: str, message_body: str):
     except Exception as e:
         return {"error": str(e)}
 
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+
+
+
 # Function to assume AWS IAM role
 def assume_role(account_id: str, role_name: str):
     try:
-        sts_client = boto3.client('sts')
+        #sts_client = boto3.client('sts')
+        sts_client = boto3.client(
+    'sts',
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
         role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
         response = sts_client.assume_role(
             RoleArn=role_arn,
