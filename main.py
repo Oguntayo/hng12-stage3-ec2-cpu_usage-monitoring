@@ -55,7 +55,7 @@ def assume_role(account_id: str, role_name: str):
     'sts',
     aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name="us-east-1"
+    region_name=AWS_REGION
 )
         role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
         response = sts_client.assume_role(
@@ -78,7 +78,7 @@ async def check_cpu(account_id: str, role_name: str, instance_id: str,phone_numb
             aws_access_key_id=credentials['AccessKeyId'],
             aws_secret_access_key=credentials['SecretAccessKey'],
             aws_session_token=credentials['SessionToken'],
-            region_name="us-east-1" 
+            region_name=AWS_REGION
         )
 
         end_time = datetime.utcnow()
