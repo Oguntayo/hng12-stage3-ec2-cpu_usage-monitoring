@@ -77,7 +77,8 @@ async def check_cpu(account_id: str, role_name: str, instance_id: str,phone_numb
             'cloudwatch',
             aws_access_key_id=credentials['AccessKeyId'],
             aws_secret_access_key=credentials['SecretAccessKey'],
-            aws_session_token=credentials['SessionToken']
+            aws_session_token=credentials['SessionToken'],
+            region_name="us-east-1" 
         )
 
         end_time = datetime.utcnow()
