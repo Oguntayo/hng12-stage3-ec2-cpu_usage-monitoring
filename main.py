@@ -44,7 +44,7 @@ async def send_sms_alert(to_phone_number: str, message_body: str):
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-
+AWS_REGION = os.getenv("AWS_REGION")
 
 
 # Function to assume AWS IAM role
