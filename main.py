@@ -77,24 +77,66 @@ def get_integration_json(request: Request):
     """
     base_url = str(request.base_url).rstrip("/")
     return {
-        "data": {
-            "descriptions": {
-                "app_name": "AWS EC2 CPU Monitor",
-                "app_description": "Monitors EC2 CPU usage and sends alerts",
-                "app_url": base_url,
-                "app_logo": "https://i.imgur.com/lZqvffp.png",#https://imgur.com/PN3pWJH
-                "background_color": "#fff"
-            },
-            "integration_type": "interval",
-            "settings": [
-                {"label": "AWS Account ID", "type": "text", "required": True, "default": ""},
-                {"label": "IAM Role Name", "type": "text", "required": True, "default": ""},
-                {"label": "EC2 Instance ID", "type": "text", "required": True, "default": ""},
-                #{"label": "Alert Phone Number", "type": "text", "required": True, "default": ""},
-                {"label": "Interval", "type": "text", "required": True, "default": "*/5 * * * *"}
-            ],
-            "tick_url": f"{base_url}/tick"
-        }
+{
+  "data": {
+    "date": {
+      "created_at": "2025-02-19",
+      "updated_at": "2025-02-19"
+    },
+    "descriptions": {
+      "app_name": "AWS EC2 CPU Monitor",
+      "app_description": "Monitors EC2 CPU usage and sends alerts",
+      "app_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com",
+      "app_logo": "https://imgur.com/PN3pWJH",
+      "background_color": "#ffffff"
+    },
+    "integration_category": "Monitoring & Logging",
+    "integration_type": "interval",
+    "is_active": true,
+ 
+    "key_features": [
+      "Automated CPU monitoring for AWS EC2 instances",
+      "Sends SMS alerts when CPU usage exceeds threshold",
+      "Configurable monitoring interval",
+      "Seamless AWS IAM role authentication"
+    ],
+    "permissions": {
+      "monitoring_user": {
+        "always_online": true,
+        "display_name": "Performance Monitor"
+      }
+    },
+    "settings": [
+      {
+        "label": "AWS-Account-ID",
+        "type": "text",
+        "required": true,
+        "default": ""
+      },
+      {
+        "label": "IAM-Role-Name",
+        "type": "text",
+        "required": true,
+        "default": ""
+      },
+      {
+        "label": "EC2-Instance-ID",
+        "type": "text",
+        "required": true,
+        "default": ""
+      },
+      {
+        "label": "Interval",
+        "type": "text",
+        "required": true,
+        "default": "*/5****"
+      }
+    ],
+    "tick_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/tick"
+    #"target_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/check_cpu/{AWS-Account-ID}/{IAM-Role-Name}/{EC2-Instance-ID}"
+  }
+}
+
     }
 
 
