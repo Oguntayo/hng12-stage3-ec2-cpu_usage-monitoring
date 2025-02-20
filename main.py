@@ -102,7 +102,7 @@ class CPUMonitorPayload(BaseModel):
     account_id: str
     role_name: str
     instance_id: str
-    phone_number: str
+    #phone_number: str
     return_url: str
 
 
@@ -157,9 +157,9 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
     message = f"CPU usage for instance {payload.instance_id} is {cpu_usage}% at {formatted_time}."
 
     
-    if cpu_usage :#>= 85:
-        alert_sent = True
-        await send_sms_alert(payload.phone_number, message)
+    # if cpu_usage :#>= 85:
+    #     alert_sent = True
+    #     await send_sms_alert(payload.phone_number, message)
     
     data = {
         "event_name": "CPU Monitor",
