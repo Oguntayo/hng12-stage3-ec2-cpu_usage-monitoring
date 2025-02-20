@@ -93,7 +93,7 @@ def get_integration_json(request: Request):
                 {"label": "Alert Phone Number", "type": "text", "required": True, "default": ""},
                 {"label": "Interval", "type": "text", "required": True, "default": "*/5 * * * *"}
             ],
-            "tick_url": f"{base_url}/check_cpu/{{AWS_Account_ID}}/{{IAM_Role_Name}}/{{EC2_Instance_ID}}/{{Alert_Phone_Number}}"
+            "tick_url": f"{base_url}/tick"
         }
     }
 
