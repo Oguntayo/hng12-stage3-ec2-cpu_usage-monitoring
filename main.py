@@ -125,6 +125,12 @@ def get_integration_json(request: Request):
         "required": True,
         "default": ""
       },
+          {
+        "label": "Return-URL",
+        "type": "text",
+        "required": True,
+        "default": ""
+      },
       {
         "label": "Interval",
         "type": "text",
