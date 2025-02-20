@@ -182,3 +182,7 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
 def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
     background_tasks.add_task(monitor_cpu_task, payload)
     return {"status": "accepted"}
+@app.get("/healthcheck")
+async def health_check():
+    """Checks if server is active."""
+    return {"status": "active"}
