@@ -132,8 +132,8 @@ def get_integration_json(request: Request):
         "default": "*/5****"
       }
     ],
-    "tick_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/tick"
-    #"target_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/check_cpu/{AWS-Account-ID}/{IAM-Role-Name}/{EC2-Instance-ID}"
+    "tick_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/tick",
+    "target_url": ""
   }
 }
 
