@@ -90,7 +90,7 @@ def get_integration_json(request: Request):
                 {"label": "AWS Account ID", "type": "text", "required": True, "default": ""},
                 {"label": "IAM Role Name", "type": "text", "required": True, "default": ""},
                 {"label": "EC2 Instance ID", "type": "text", "required": True, "default": ""},
-                {"label": "Alert Phone Number", "type": "text", "required": True, "default": ""},
+                #{"label": "Alert Phone Number", "type": "text", "required": True, "default": ""},
                 {"label": "Interval", "type": "text", "required": True, "default": "*/5 * * * *"}
             ],
             "tick_url": f"{base_url}/tick"
