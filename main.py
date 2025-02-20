@@ -77,7 +77,7 @@ def get_integration_json(request: Request):
     """
     base_url = str(request.base_url).rstrip("/")
     return {
-{
+
   "data": {
     "date": {
       "created_at": "2025-02-19",
@@ -92,7 +92,7 @@ def get_integration_json(request: Request):
     },
     "integration_category": "Monitoring & Logging",
     "integration_type": "interval",
-    "is_active": true,
+    "is_active": True,
  
     "key_features": [
       "Automated CPU monitoring for AWS EC2 instances",
@@ -102,7 +102,7 @@ def get_integration_json(request: Request):
     ],
     "permissions": {
       "monitoring_user": {
-        "always_online": true,
+        "always_online": True,
         "display_name": "Performance Monitor"
       }
     },
@@ -110,25 +110,25 @@ def get_integration_json(request: Request):
       {
         "label": "AWS-Account-ID",
         "type": "text",
-        "required": true,
+        "required": True,
         "default": ""
       },
       {
         "label": "IAM-Role-Name",
         "type": "text",
-        "required": true,
+        "required": True,
         "default": ""
       },
       {
         "label": "EC2-Instance-ID",
         "type": "text",
-        "required": true,
+        "required": True,
         "default": ""
       },
       {
         "label": "Interval",
         "type": "text",
-        "required": true,
+        "required": True,
         "default": "*/5****"
       }
     ],
@@ -137,7 +137,7 @@ def get_integration_json(request: Request):
   }
 }
 
-    }
+
 
 
 class CPUMonitorPayload(BaseModel):
