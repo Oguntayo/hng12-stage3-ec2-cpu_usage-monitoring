@@ -77,6 +77,57 @@ def get_integration_json(request: Request):
     """
     base_url = str(request.base_url).rstrip("/")
     return {
+  "data": {
+    "date": {
+      "created_at": "2025-02-19",
+      "updated_at": "2025-02-19"
+    },
+"descriptions": {
+  "app_name": "Telex SMS Messenger",
+  "app_description": "Sends Telex channel messages as SMS to a specified number",
+  "app_url": "BASE_URL",
+  "app_logo": "https://imgur.com/PN3pWJH",
+  "background_color": "#fff"
+},
+
+    "integration_category": "Monitoring & Logging",
+    "integration_type": "output",
+    "is_active": true,
+    
+    "key_features": [
+      "Sends SMS to a target in real time",
+      "Real time notifications when message enters the channel",
+      "Easy setup with pre-configured commit patterns"
+    ],
+      "website": "https://imgur.com/PN3pWJH",
+    "author": "YoungOH",
+    "settings": [
+
+    {
+        "label": "slack_channel_url",
+        "type": "text",
+        "required": true,
+        "description": "Slack Webhook URL",
+        "default": ""
+      },
+      {
+        "label": "Phone_number",
+        "type": "text",
+        "required": true,
+        "default": ""
+      }
+    ],
+    "target_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/target"
+  }
+}
+
+@app.get("/interval-integration.json")
+def get_interval_integration_json(request: Request):
+    """
+    Returns integration metadata for the check_cpu function.
+    """
+    base_url = str(request.base_url).rstrip("/")
+    return {
 
   "data": {
     "date": {
@@ -150,9 +201,11 @@ class CPUMonitorPayload(BaseModel):
     account_id: str
     role_name: str
     instance_id: str
-    #phone_number: str
     return_url: str
 
+class SMSPayload(BaseModel):
+    phone_number: str
+    message:str
 
 async def get_cpu_usage(account_id: str, role_name: str, instance_id: str) -> float:
     credentials = assume_role(account_id, role_name)
@@ -198,21 +251,13 @@ async def send_sms_alert(to_phone_number: str, message_body: str):
 
 async def monitor_cpu_task(payload: CPUMonitorPayload):
     cpu_usage = await get_cpu_usage(payload.account_id, payload.role_name, payload.instance_id)
-    alert_sent = False
-    end_time = datetime.utcnow()
     end_time = datetime.utcnow()
     formatted_time = end_time.strftime("%H:%M:%S")
     message = f"CPU usage for instance {payload.instance_id} is {cpu_usage}% at {formatted_time}."
-
-    
-    # if cpu_usage :#>= 85:
-    #     alert_sent = True
-    #     await send_sms_alert(payload.phone_number, message)
-    
     data = {
         "event_name": "CPU Monitor",
         "message": message,
-        "status": "success" if not alert_sent else "error",
+        "status": "success" ,#if not alert_sent else "error",
         "username": payload.instance_id
     }
     
@@ -224,12 +269,22 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
             "Content-Type": "application/json"
         }
     )
-    #print(response.json())
+    
+async def send_sms_task(payload: SMSPayload):
+    alert_sent = True
+    await send_sms_alert(payload.phone_number, payload.message)
+    
 
 @app.post("/tick", status_code=202)
 def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
     background_tasks.add_task(monitor_cpu_task, payload)
     return {"status": "accepted"}
+
+@app.post("/target",status_code=202)
+def send_alert(payload:SMSPayload,background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_sms_task,payload)
+    return {"status":"accepted"}
+
 @app.get("/health_check")
 async def health_check():
     """Checks if server is active."""
