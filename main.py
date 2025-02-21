@@ -185,7 +185,7 @@ def get_interval_integration_json(request: Request):
         "label": "interval",
         "type": "text",
         "required": True,
-        "default": "*/1 * * *"
+        "default": "*/1 * * * *"
       }
     ],
     "tick_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/tick",
