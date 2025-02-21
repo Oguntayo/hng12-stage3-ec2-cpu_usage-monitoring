@@ -102,6 +102,14 @@ def get_integration_json(request: Request):
       "website": "https://imgur.com/PN3pWJH",
     "author": "YoungOH",
     "settings": [
+
+    {
+        "label": "slack_channel_url",
+        "type": "text",
+        "required": True,
+        "description": "Slack Webhook URL",
+        "default": ""
+      },
       {
         "label": "Phone_number",
         "type": "text",
