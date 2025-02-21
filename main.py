@@ -26,9 +26,6 @@ app.add_middleware(
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-# TWILIO_ACCOUNT_SID = "AC973b9c10c57b2bb916a225292a2ca5ef"
-# TWILIO_AUTH_TOKEN = "2e117115680854c9d1ad3ecbb3da4477"
-# TWILIO_PHONE_NUMBER = "+12344234914"
 #AWS CREDENTIALS
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -72,8 +69,6 @@ def assume_role(account_id: str, role_name: str):
         raise HTTPException(status_code=500, detail=f"Error assuming role: {str(e)}")
 @app.get("/integration.json")
 def get_integration_json(request: Request):
-    # data = request.json()  # Extract JSON body
-    # print(f"Received request: {data}")  # Log the actual data
     """
     Returns json metadata for the output integration.
     """
@@ -88,7 +83,7 @@ def get_integration_json(request: Request):
   "app_name": "Telex SMS Messenger",
   "app_description": "Sends Telex channel messages as SMS to a specified number",
   "app_url": "BASE_URL",
-  "app_logo": "https://imgur.com/PN3pWJH",
+  "app_logo": "https://res.cloudinary.com/naijaceo/image/upload/v1595027227/3d_logo_maker_bonus_ssqd0g.png",
   "background_color": "#fff"
 },
 
@@ -101,7 +96,7 @@ def get_integration_json(request: Request):
       "Real time notifications when message enters the channel",
       "Easy setup with pre-configured commit patterns"
     ],
-      "website": "https://imgur.com/PN3pWJH",
+     "website": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/integration.json",
     "author": "YoungOH",
     "settings": [
 
@@ -140,7 +135,7 @@ def get_interval_integration_json(request: Request):
       "app_name": "AWS EC2 CPU Monitor",
       "app_description": "Monitors EC2 CPU usage and sends alerts",
       "app_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com",
-      "app_logo": "https://imgur.com/PN3pWJH",
+      "app_logo": "https://res.cloudinary.com/naijaceo/image/upload/v1595027227/3d_logo_maker_bonus_ssqd0g.png",
       "background_color": "#ffffff"
     },
     "integration_category": "Monitoring & Logging",
@@ -158,7 +153,8 @@ def get_interval_integration_json(request: Request):
         "always_online": True,
         "display_name": "Performance Monitor"
       }
-    },     "website": "https://imgur.com/PN3pWJH",
+    },     
+    "website": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/interval-integration.json",
     "author": "YoungOH",
     "settings": [
       {
@@ -186,10 +182,10 @@ def get_interval_integration_json(request: Request):
         "default": ""
       },
       {
-        "label": "Interval",
+        "label": "interval",
         "type": "text",
         "required": True,
-        "default": "*/5****"
+        "default": "*/1 * * *"
       }
     ],
     "tick_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/tick",
