@@ -307,26 +307,28 @@ def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
 #     background_tasks.add_task(send_sms_task,payload)
 #     return {"status":"accepted"}
 # from fastapi import Request
-
 @app.post("/target", status_code=202)
 async def send_alert(request: Request, background_tasks: BackgroundTasks):
     try:
-        data = await request.json()  # Extract JSON payload
+        data = await request.json()
         print("/target received:", data)
 
-        # Extract required fields
-        settings_str = data.get("settings", "{}")  # Default to empty JSON string
+        # Extract fields
         message = data.get("message", "")
+        settings_list = data.get("settings", [])
 
-        # Parse settings to extract phone number
-        settings_dict = json.loads(settings_str)
-        phone_number = settings_dict.get("phone_number")
-
-        if phone_number:
-            background_tasks.add_task(send_sms_alert, phone_number, message)
-            return {"status": "accepted"}
-        else:
+        # Find phone number in settings
+        phone_number = None
+        for setting in settings_list:
+            if setting.get("label") == "Phone_number":  # Match correct label
+                phone_number = setting.get("default")
+                break
+        
+        if not phone_number:
             return {"error": "Phone number missing in settings"}, 400
+
+        background_tasks.add_task(send_sms_alert, phone_number, message)
+        return {"status": "accepted"}
 
     except json.JSONDecodeError:
         return {"error": "Invalid JSON format"}, 400
