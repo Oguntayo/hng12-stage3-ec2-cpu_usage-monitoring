@@ -269,19 +269,13 @@ async def send_sms_alert(to_phone_number: str, message_body: str):
         return {"error": str(e)}
 
 async def send_sms_task(payload: SMSPayload):
-    print("/target", payload)
     try:
-        print(payload)
-
-        # Ensure `settings` is treated as a list
         phone_number = None
         for setting in payload.settings:
             if setting.get("label") == "Phone_number":
                 phone_number = setting.get("default")
                 break
-
         message = payload.message  # Extract message
-
         if phone_number:
             await send_sms_alert(phone_number, message)  # Send SMS
         else:
@@ -291,53 +285,34 @@ async def send_sms_task(payload: SMSPayload):
 
 @app.post("/tick", status_code=202)
 async def monitor_cpu(request: Request, background_tasks: BackgroundTasks):
-    payload = await request.json()
-    print("/target received:", payload)
-    
-    # Extract relevant values from "settings"
+    payload = await request.json()    
     settings_dict = {s["label"]: s["default"] for s in payload["settings"]}
-    
-    # Ensure required fields exist
     required_keys = ["AWS-Account-ID", "IAM-Role-Name", "EC2-Instance-ID", "Return-URL"]
     if not all(key in settings_dict for key in required_keys):
         return {"status": "error", "message": "Missing required settings"}
-
     cpu_payload = CPUMonitorPayload(
         account_id=settings_dict["AWS-Account-ID"],
         role_name=settings_dict["IAM-Role-Name"],
         instance_id=settings_dict["EC2-Instance-ID"],
         return_url=settings_dict["Return-URL"]
     )
-    
     background_tasks.add_task(monitor_cpu_task, cpu_payload)
     return {"status": "accepted"}
-
-
-
 @app.post("/target", status_code=202)
 async def send_alert(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.json()
-        print("/target received:", data)
-
-        # Extract CPU usage from the message
         message = data.get("message", "")
         cpu_usage_match = re.search(r"CPU usage for instance .*? is ([\d.]+)%", message)
         cpu_usage = float(cpu_usage_match.group(1)) if cpu_usage_match else None
-        print(f"Extracted CPU Usage: {cpu_usage}%")
-
-        # Only send SMS if CPU usage is greater than 85%
         if cpu_usage is not None and cpu_usage > 85:
-            print("CPU usage is high! Sending SMS alert.")
             payload = SMSPayload(**data)
             background_tasks.add_task(send_sms_task, payload)
         else:
             print("CPU usage is normal. No SMS sent.")
-
         return {"status": "accepted"}
     except json.JSONDecodeError:
         return {"error": "Invalid JSON format"}, 400
-
 @app.get("/health_check")
 async def health_check():
     """Checks if server is active."""
