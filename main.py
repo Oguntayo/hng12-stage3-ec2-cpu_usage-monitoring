@@ -80,7 +80,7 @@ def get_integration_json(request: Request):
       "updated_at": "2025-02-19"
     },
 "descriptions": {
-  "app_name": "Telex SMS Messenger",
+  "app_name": "Telex CHANNEL MESSAGE TO SMS",
   "app_description": "Sends Telex channel messages as SMS to a specified number",
   "app_url": "BASE_URL",
   "app_logo": "https://res.cloudinary.com/naijaceo/image/upload/v1595027227/3d_logo_maker_bonus_ssqd0g.png",
@@ -132,7 +132,7 @@ def get_interval_integration_json(request: Request):
       "updated_at": "2025-02-19"
     },
     "descriptions": {
-      "app_name": "AWS EC2 CPU Monitor",
+      "app_name": "AWS EC2 INSTANCE CPU Monitor",
       "app_description": "Monitors EC2 CPU usage and sends alerts",
       "app_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com",
       "app_logo": "https://res.cloudinary.com/naijaceo/image/upload/v1595027227/3d_logo_maker_bonus_ssqd0g.png",
