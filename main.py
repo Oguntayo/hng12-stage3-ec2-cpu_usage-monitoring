@@ -301,15 +301,11 @@ async def send_sms_task(payload: SMSPayload):
         print(f"Error processing SMS task: {str(e)}")
 
 @app.post("/tick", status_code=202)
-def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
+async def monitor_cpu(request: Request, background_tasks: BackgroundTasks):
+    data = await request.json()
+    print("/target received:", data)
     background_tasks.add_task(monitor_cpu_task, payload)
     return {"status": "accepted"}
-
-# @app.post("/target",status_code=202)
-# def send_alert(payload:SMSPayload,background_tasks: BackgroundTasks):
-#     print("/target",payload)
-#     background_tasks.add_task(send_sms_task,payload)
-#     return {"status":"accepted"}
 
 
 @app.post("/target", status_code=202)
@@ -317,15 +313,11 @@ async def send_alert(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.json()
         print("/target received:", data)
-
         # Convert request data into SMSPayload object
         payload = SMSPayload(**data)
-
         # Send SMS in the background
         background_tasks.add_task(send_sms_task, payload)
-
         return {"status": "accepted"}
-
     except json.JSONDecodeError:
         return {"error": "Invalid JSON format"}, 400
 
