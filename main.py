@@ -72,7 +72,7 @@ def assume_role(account_id: str, role_name: str):
         raise HTTPException(status_code=500, detail=f"Error assuming role: {str(e)}")
 @app.get("/integration.json")
 def get_integration_json(request: Request):
-    data = await request.json()  # Extract JSON body
+    data = request.json()  # Extract JSON body
     print(f"Received request: {data}")  # Log the actual data
     """
     Returns json metadata for the output integration.
