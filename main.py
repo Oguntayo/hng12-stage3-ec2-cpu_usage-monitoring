@@ -72,6 +72,7 @@ def assume_role(account_id: str, role_name: str):
         raise HTTPException(status_code=500, detail=f"Error assuming role: {str(e)}")
 @app.get("/integration.json")
 def get_integration_json(request: Request):
+    print("/integration",request)
     """
     Returns json metadata for the output integration.
     """
@@ -280,7 +281,7 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
 #     await send_sms_alert(payload.phone_number, payload.message)
     
 async def send_sms_task(payload: SMSPayload):
-    print("/SMSPayload",payload)
+    print("/target",payload)
     try:
         print(payload)
         settings_dict = json.loads(payload.settings)  # Parse string to dictionary
