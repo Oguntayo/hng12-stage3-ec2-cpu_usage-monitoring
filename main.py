@@ -73,7 +73,7 @@ def assume_role(account_id: str, role_name: str):
 @app.get("/integration.json")
 def get_integration_json(request: Request):
     """
-    Returns integration metadata for the check_cpu function.
+    Returns json metadata for the output integration.
     """
     base_url = str(request.base_url).rstrip("/")
     return {
@@ -92,7 +92,7 @@ def get_integration_json(request: Request):
 
     "integration_category": "Monitoring & Logging",
     "integration_type": "output",
-    "is_active": true,
+    "is_active": True,
     
     "key_features": [
       "Sends SMS to a target in real time",
@@ -106,14 +106,14 @@ def get_integration_json(request: Request):
     {
         "label": "slack_channel_url",
         "type": "text",
-        "required": true,
+        "required": True,
         "description": "Slack Webhook URL",
         "default": ""
       },
       {
         "label": "Phone_number",
         "type": "text",
-        "required": true,
+        "required": True,
         "default": ""
       }
     ],
