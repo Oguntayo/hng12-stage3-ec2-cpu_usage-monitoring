@@ -10,6 +10,7 @@ import asyncio
 import requests
 from twilio.rest import Client
 import json
+import re
 app = FastAPI()
 
 # CORS Configuration
@@ -185,7 +186,7 @@ def get_interval_integration_json(request: Request):
         "label": "interval",
         "type": "text",
         "required": True,
-        "default": "*/1 * * * *"
+        "default": "*/5 * * * *"
       }
     ],
     "tick_url": "https://hng12-stage3-ec2-cpu-usage-monitoring.onrender.com/tick",
@@ -288,7 +289,7 @@ async def send_sms_task(payload: SMSPayload):
     except Exception as e:
         print(f"Error processing SMS task: {str(e)}")
 
-@app.post("/tick", status_code=202
+@app.post("/tick", status_code=202)
 async def monitor_cpu(request: Request, background_tasks: BackgroundTasks):
     payload = await request.json()
     print("/target received:", payload)
@@ -311,15 +312,28 @@ async def monitor_cpu(request: Request, background_tasks: BackgroundTasks):
     background_tasks.add_task(monitor_cpu_task, cpu_payload)
     return {"status": "accepted"}
 
+
+
 @app.post("/target", status_code=202)
 async def send_alert(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.json()
         print("/target received:", data)
-        # Convert request data into SMSPayload object
-        payload = SMSPayload(**data)
-        # Send SMS in the background
-        background_tasks.add_task(send_sms_task, payload)
+
+        # Extract CPU usage from the message
+        message = data.get("message", "")
+        cpu_usage_match = re.search(r"CPU usage for instance .*? is ([\d.]+)%", message)
+        cpu_usage = float(cpu_usage_match.group(1)) if cpu_usage_match else None
+        print(f"Extracted CPU Usage: {cpu_usage}%")
+
+        # Only send SMS if CPU usage is greater than 85%
+        if cpu_usage is not None and cpu_usage > 85:
+            print("CPU usage is high! Sending SMS alert.")
+            payload = SMSPayload(**data)
+            background_tasks.add_task(send_sms_task, payload)
+        else:
+            print("CPU usage is normal. No SMS sent.")
+
         return {"status": "accepted"}
     except json.JSONDecodeError:
         return {"error": "Invalid JSON format"}, 400
