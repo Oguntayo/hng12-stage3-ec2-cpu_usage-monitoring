@@ -72,8 +72,8 @@ def assume_role(account_id: str, role_name: str):
         raise HTTPException(status_code=500, detail=f"Error assuming role: {str(e)}")
 @app.get("/integration.json")
 def get_integration_json(request: Request):
-    data = request.json()  # Extract JSON body
-    print(f"Received request: {data}")  # Log the actual data
+    # data = request.json()  # Extract JSON body
+    # print(f"Received request: {data}")  # Log the actual data
     """
     Returns json metadata for the output integration.
     """
@@ -301,11 +301,35 @@ def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
     background_tasks.add_task(monitor_cpu_task, payload)
     return {"status": "accepted"}
 
-@app.post("/target",status_code=202)
-def send_alert(payload:SMSPayload,background_tasks: BackgroundTasks):
-    print("/target",payload)
-    background_tasks.add_task(send_sms_task,payload)
-    return {"status":"accepted"}
+# @app.post("/target",status_code=202)
+# def send_alert(payload:SMSPayload,background_tasks: BackgroundTasks):
+#     print("/target",payload)
+#     background_tasks.add_task(send_sms_task,payload)
+#     return {"status":"accepted"}
+# from fastapi import Request
+
+@app.post("/target", status_code=202)
+async def send_alert(request: Request, background_tasks: BackgroundTasks):
+    try:
+        data = await request.json()  # Extract JSON payload
+        print("/target received:", data)
+
+        # Extract required fields
+        settings_str = data.get("settings", "{}")  # Default to empty JSON string
+        message = data.get("message", "")
+
+        # Parse settings to extract phone number
+        settings_dict = json.loads(settings_str)
+        phone_number = settings_dict.get("phone_number")
+
+        if phone_number:
+            background_tasks.add_task(send_sms_alert, phone_number, message)
+            return {"status": "accepted"}
+        else:
+            return {"error": "Phone number missing in settings"}, 400
+
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON format"}, 400
 
 @app.get("/health_check")
 async def health_check():
