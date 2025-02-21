@@ -199,11 +199,9 @@ class CPUMonitorPayload(BaseModel):
     instance_id: str
     return_url: str
     
-    
-    
 class SMSPayload(BaseModel):
     message: str
-    settings: list  # Ensure this is treated as a list
+    settings: list  
 
 async def get_cpu_usage(account_id: str, role_name: str, instance_id: str) -> float:
     credentials = assume_role(account_id, role_name)
@@ -290,7 +288,7 @@ async def send_sms_task(payload: SMSPayload):
     except Exception as e:
         print(f"Error processing SMS task: {str(e)}")
 
-@app.post("/tick", status_code=202)
+@app.post("/tick", status_code=202
 async def monitor_cpu(request: Request, background_tasks: BackgroundTasks):
     payload = await request.json()
     print("/target received:", payload)
