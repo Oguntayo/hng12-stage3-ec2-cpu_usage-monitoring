@@ -9,7 +9,7 @@ import httpx
 import asyncio
 import requests
 from twilio.rest import Client
-
+import json
 app = FastAPI()
 
 # CORS Configuration
@@ -156,7 +156,8 @@ def get_interval_integration_json(request: Request):
         "always_online": True,
         "display_name": "Performance Monitor"
       }
-    },
+    },     "website": "https://imgur.com/PN3pWJH",
+    "author": "YoungOH",
     "settings": [
       {
         "label": "AWS-Account-ID",
@@ -204,8 +205,8 @@ class CPUMonitorPayload(BaseModel):
     return_url: str
 
 class SMSPayload(BaseModel):
-    phone_number: str
-    message:str
+    message: str
+    settings: str
 
 async def get_cpu_usage(account_id: str, role_name: str, instance_id: str) -> float:
     credentials = assume_role(account_id, role_name)
@@ -270,10 +271,27 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
         }
     )
     
-async def send_sms_task(payload: SMSPayload):
-    alert_sent = True
-    await send_sms_alert(payload.phone_number, payload.message)
+# async def send_sms_task(payload: SMSPayload):
+#     print(payload)
+#     settings_dict = json.loads(payload.settings)  # Parse string to dictionary
+#     phone_number = settings_dict.get("Phone_number")  # Extract phone number
+#     message = payload.message  # Extract message
+#     alert_sent = True
+#     await send_sms_alert(payload.phone_number, payload.message)
     
+async def send_sms_task(payload: SMSPayload):
+    try:
+        print(payload)
+        settings_dict = json.loads(payload.settings)  # Parse string to dictionary
+        phone_number = settings_dict.get("phone_number")  # Extract phone number
+        message = payload.message  # Extract message
+        alert_sent = True
+        if phone_number:
+            await send_sms_alert(phone_number, message)  # Send SMS
+        else:
+            print("Error: No phone number found in settings.")
+    except json.JSONDecodeError:
+        print("Error: Invalid JSON format in settings.")
 
 @app.post("/tick", status_code=202)
 def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
