@@ -102,14 +102,6 @@ def get_integration_json(request: Request):
       "website": "https://imgur.com/PN3pWJH",
     "author": "YoungOH",
     "settings": [
-
-    {
-        "label": "slack_channel_url",
-        "type": "text",
-        "required": True,
-        "description": "Slack Webhook URL",
-        "default": ""
-      },
       {
         "label": "Phone_number",
         "type": "text",
@@ -280,6 +272,7 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
 #     await send_sms_alert(payload.phone_number, payload.message)
     
 async def send_sms_task(payload: SMSPayload):
+    print("/SMSPayload",payload)
     try:
         print(payload)
         settings_dict = json.loads(payload.settings)  # Parse string to dictionary
@@ -300,6 +293,7 @@ def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
 
 @app.post("/target",status_code=202)
 def send_alert(payload:SMSPayload,background_tasks: BackgroundTasks):
+    print("/target",payload)
     background_tasks.add_task(send_sms_task,payload)
     return {"status":"accepted"}
 
