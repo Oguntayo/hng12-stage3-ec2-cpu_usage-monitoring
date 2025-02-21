@@ -208,7 +208,7 @@ class CPUMonitorPayload(BaseModel):
 
 class SMSPayload(BaseModel):
     message: str
-    settings: str
+    settings: list  # Ensure this is treated as a list
 
 async def get_cpu_usage(account_id: str, role_name: str, instance_id: str) -> float:
     credentials = assume_role(account_id, role_name)
@@ -237,20 +237,6 @@ async def get_cpu_usage(account_id: str, role_name: str, instance_id: str) -> fl
         return response["Datapoints"][0]["Average"]
     return 0.0
 
-async def send_sms_alert(to_phone_number: str, message_body: str):
-    loop = asyncio.get_event_loop()
-    try:
-        message = await loop.run_in_executor(
-            None, 
-            lambda: twilio_client.messages.create(
-                body=message_body,
-                from_=TWILIO_PHONE_NUMBER,
-                to=to_phone_number
-            )
-        )
-        return {"sid": message.sid, "status": message.status}
-    except Exception as e:
-        return {"error": str(e)}
 
 async def monitor_cpu_task(payload: CPUMonitorPayload):
     cpu_usage = await get_cpu_usage(payload.account_id, payload.role_name, payload.instance_id)
@@ -281,20 +267,42 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
 #     alert_sent = True
 #     await send_sms_alert(payload.phone_number, payload.message)
     
+
+async def send_sms_alert(to_phone_number: str, message_body: str):
+    loop = asyncio.get_event_loop()
+    try:
+        message = await loop.run_in_executor(
+            None, 
+            lambda: twilio_client.messages.create(
+                body=message_body,
+                from_=TWILIO_PHONE_NUMBER,
+                to=to_phone_number
+            )
+        )
+        return {"sid": message.sid, "status": message.status}
+    except Exception as e:
+        return {"error": str(e)}
+
 async def send_sms_task(payload: SMSPayload):
-    print("/target",payload)
+    print("/target", payload)
     try:
         print(payload)
-        settings_dict = json.loads(payload.settings)  # Parse string to dictionary
-        phone_number = settings_dict.get("phone_number")  # Extract phone number
+
+        # Ensure `settings` is treated as a list
+        phone_number = None
+        for setting in payload.settings:
+            if setting.get("label") == "Phone_number":
+                phone_number = setting.get("default")
+                break
+
         message = payload.message  # Extract message
-        alert_sent = True
+
         if phone_number:
             await send_sms_alert(phone_number, message)  # Send SMS
         else:
             print("Error: No phone number found in settings.")
-    except json.JSONDecodeError:
-        print("Error: Invalid JSON format in settings.")
+    except Exception as e:
+        print(f"Error processing SMS task: {str(e)}")
 
 @app.post("/tick", status_code=202)
 def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
@@ -306,28 +314,20 @@ def monitor_cpu(payload: CPUMonitorPayload, background_tasks: BackgroundTasks):
 #     print("/target",payload)
 #     background_tasks.add_task(send_sms_task,payload)
 #     return {"status":"accepted"}
-# from fastapi import Request
+
+
 @app.post("/target", status_code=202)
 async def send_alert(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.json()
         print("/target received:", data)
 
-        # Extract fields
-        message = data.get("message", "")
-        settings_list = data.get("settings", [])
+        # Convert request data into SMSPayload object
+        payload = SMSPayload(**data)
 
-        # Find phone number in settings
-        phone_number = None
-        for setting in settings_list:
-            if setting.get("label") == "Phone_number":  # Match correct label
-                phone_number = setting.get("default")
-                break
-        
-        if not phone_number:
-            return {"error": "Phone number missing in settings"}, 400
+        # Send SMS in the background
+        background_tasks.add_task(send_sms_task, payload)
 
-        background_tasks.add_task(send_sms_alert, phone_number, message)
         return {"status": "accepted"}
 
     except json.JSONDecodeError:
