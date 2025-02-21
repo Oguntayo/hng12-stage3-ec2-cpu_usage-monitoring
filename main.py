@@ -193,15 +193,14 @@ def get_interval_integration_json(request: Request):
   }
 }
 
-
-
-
 class CPUMonitorPayload(BaseModel):
     account_id: str
     role_name: str
     instance_id: str
     return_url: str
-
+    
+    
+    
 class SMSPayload(BaseModel):
     message: str
     settings: list  # Ensure this is treated as a list
@@ -254,15 +253,6 @@ async def monitor_cpu_task(payload: CPUMonitorPayload):
             "Content-Type": "application/json"
         }
     )
-    
-# async def send_sms_task(payload: SMSPayload):
-#     print(payload)
-#     settings_dict = json.loads(payload.settings)  # Parse string to dictionary
-#     phone_number = settings_dict.get("Phone_number")  # Extract phone number
-#     message = payload.message  # Extract message
-#     alert_sent = True
-#     await send_sms_alert(payload.phone_number, payload.message)
-    
 
 async def send_sms_alert(to_phone_number: str, message_body: str):
     loop = asyncio.get_event_loop()
@@ -302,11 +292,26 @@ async def send_sms_task(payload: SMSPayload):
 
 @app.post("/tick", status_code=202)
 async def monitor_cpu(request: Request, background_tasks: BackgroundTasks):
-    data = await request.json()
-    print("/target received:", data)
-    background_tasks.add_task(monitor_cpu_task, payload)
-    return {"status": "accepted"}
+    payload = await request.json()
+    print("/target received:", payload)
+    
+    # Extract relevant values from "settings"
+    settings_dict = {s["label"]: s["default"] for s in payload["settings"]}
+    
+    # Ensure required fields exist
+    required_keys = ["AWS-Account-ID", "IAM-Role-Name", "EC2-Instance-ID", "Return-URL"]
+    if not all(key in settings_dict for key in required_keys):
+        return {"status": "error", "message": "Missing required settings"}
 
+    cpu_payload = CPUMonitorPayload(
+        account_id=settings_dict["AWS-Account-ID"],
+        role_name=settings_dict["IAM-Role-Name"],
+        instance_id=settings_dict["EC2-Instance-ID"],
+        return_url=settings_dict["Return-URL"]
+    )
+    
+    background_tasks.add_task(monitor_cpu_task, cpu_payload)
+    return {"status": "accepted"}
 
 @app.post("/target", status_code=202)
 async def send_alert(request: Request, background_tasks: BackgroundTasks):
