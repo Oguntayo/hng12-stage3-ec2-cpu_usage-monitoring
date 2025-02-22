@@ -1,106 +1,110 @@
-EC2 CPU Usage Monitoring and SMS Alert Integration
-Overview
-This API monitors the CPU usage of an AWS EC2 instance using CloudWatch and sends alerts via Twilio SMS and a specified channel. It integrates with Telex, requiring two JSON integrations:
+# EC2 CPU Usage Monitoring API
 
-integration.json – Sends messages to a channel.
-interval-integration.json – Sends channel messages to SMS.
-The service uses an AWS IAM role to retrieve CloudWatch metrics, assume necessary permissions, and trigger alerts when CPU usage exceeds 85%.
+## Overview
 
-Features
-✅ EC2 CPU Usage Monitoring – Fetches CPU utilization using AWS CloudWatch.
-✅ AWS IAM Role Assumption – Uses STS to assume roles for cross-account access.
-✅ Telex Integration – Supports dual integrations for both channel and SMS notifications.
-✅ Twilio SMS Alerts – Sends SMS when CPU usage exceeds 85%.
-✅ CORS Handling – Allows requests from any domain for seamless API usage.
+This API monitors the CPU usage of an AWS EC2 instance using CloudWatch and sends an SMS alert via Twilio if the usage exceeds a defined threshold (85%). It assumes an AWS IAM role to retrieve CloudWatch metrics and triggers alerts when necessary.
 
-Technology Stack
-FastAPI – Web framework for API development.
-AWS CloudWatch – Fetches EC2 instance CPU metrics.
-AWS STS (Security Token Service) – Assumes IAM roles.
-Twilio API – Sends SMS notifications.
-Python – Core programming language.
-IAM Role Setup
-Before integrating with AWS, configure an IAM role with the required permissions:
+## Features
 
-Go to AWS IAM Console → Roles → Create Role.
-Select Another AWS account and enter your AWS Account ID.
-Add the following trust policy to allow the necessary AWS user to assume the role:
+- **EC2 CPU Usage Monitoring**: Retrieves the average CPU utilization of an EC2 instance.
+- **AWS IAM Role Assumption**: Uses STS to assume a role for accessing CloudWatch.
+- **Twilio SMS Alerts**: Sends SMS notifications if CPU usage exceeds 85%.
+- **CORS Handling**: Supports Cross-Origin Resource Sharing (CORS) to allow requests from any domain.
 
+## Technology Stack
 
+- **FastAPI**: Web framework for building the API.
+- **AWS CloudWatch**: Fetches EC2 instance CPU metrics.
+- **AWS STS**: Assumes IAM roles for cross-account access.
+- **Twilio API**: Sends SMS alerts.
+- **Python**: Primary programming language.
+
+## API Endpoint
+
+### **GET /check_cpu/{account_id}/{role_name}/{instance_id}/{phone_number}**
+
+Retrieves the CPU usage of a specified EC2 instance and sends an SMS alert if the usage exceeds 85%.
+
+#### **Path Parameters**
+
+| Parameter      | Type   | Description                                |
+|--------------|--------|--------------------------------------------|
+| account_id   | string | AWS account ID where the EC2 instance resides. |
+| role_name    | string | IAM role name with permissions to access CloudWatch. |
+| instance_id  | string | The EC2 instance ID to monitor. |
+| phone_number | string | The phone number to receive the SMS alert. |
+
+#### **Response Format (200 OK)**
+
+```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::277707100860:user/assume-role-user"
-            },
-            "Action": "sts:AssumeRole"
-        }
-    ]
+  "cpu_usage": 72.5,
+  "alert_sent": false
 }
+```
 
-Attach the CloudWatchReadOnlyAccess policy to the role.
-Save the Role ARN.
-API Endpoint
-GET /tick/{account_id}/{role_name}/{instance_id}
-Retrieves CPU usage and sends an alert if usage exceeds 85%.
-
-Parameter	Type	Description
-account_id	string	AWS Account ID
-role_name	string	IAM Role Name
-instance_id	string	EC2 Instance ID
-
-Response Examples
-✅ Normal Response (200 OK)
-
-
+```json
 {
- "CPU usage for instance i-03f21cd8e811c7936 is 3.834224304675515% at 20:    12:22."
+  "cpu_usage": 87.9,
+  "alert_sent": true
 }
-🚨 Alert Triggered (202 OK)
+```
 
+#### **Response Format (500 Internal Server Error)**
 
+```json
 {
   "detail": "Error retrieving CPU usage: <error message>"
 }
-Telex Integration Activation
-To activate integrations in Telex, follow these steps:
+```
 
-1️⃣ Activate interval-integration.json (Channel Messaging Integration)
-Upload the interval-integration.json file and ensure all required fields are provided.
+## Setup Instructions
 
-2️⃣ Activate integration.json (SMS Forwarding Integration)
-Upload the integration.json file and configure it to forward channel messages to SMS.
+### **Requirements**
+- Python 3.7 or higher
+- AWS account with CloudWatch permissions
+- Twilio account for SMS notifications
 
-Once both integrations are active, the system will notify the channel and forward messages as SMS.
+### **Install Dependencies**
 
-Setup Instructions
-Requirements
-Python 3.7+
-AWS account with CloudWatch permissions
-Twilio account for SMS alerts
-Install Dependencies
-Clone the repository and install dependencies:
+Clone the repository:
 
+```bash
+git clone https://github.com/Oguntayo/hng12-stage3-ec2-cpu_usage-monitoring.git
+cd hng12-stage3-ec2-cpu_usage-monitoring
+```
 
-git clone https://github.com/telexintegrations/aws-ec2-cpu-monitor-with-realtime-sms-alert.git
+Install the required dependencies:
+
+```bash
 pip install -r requirements.txt
-Run Locally
-Start the FastAPI server using Uvicorn:
+```
 
+### **Run Locally**
+
+To start the API locally, use Uvicorn:
+
+```bash
 uvicorn main:app --reload
-API will be available at http://127.0.0.1:8000.
+```
 
-Example Request:
+The API will be running on **http://127.0.0.1:8000**.
 
-curl "http://127.0.0.1:8000/tick/123456789012/MyRole/i-0abcd1234ef567890"
+Example request:
 
+```bash
+curl "http://127.0.0.1:8000/check_cpu/123456789012/MyRole/i-0abcd1234ef567890/+1234567890"
+```
 
-Notes:
-✔ Ensure IAM Role permissions allow CloudWatch Read Access.
-✔ Modify the CPU alert threshold in the code if needed.
-✔ Set Twilio credentials correctly for SMS alerts.
+### **Deployment**
 
+To deploy the API, you can use AWS EC2, AWS Lambda, or a hosting service like Render or Heroku.
 
-🔥 Now your service is fully integrated with AWS, Telex, and Twilio for real-time EC2 monitoring and SMS alerts! 🚀
+---
+
+## Notes
+- Ensure the AWS IAM role has permissions to read CloudWatch metrics.
+- The API handles errors and returns appropriate HTTP status codes.
+- The CPU alert threshold is set at 85% but can be modified in the source code.
+- Twilio credentials must be set correctly to send SMS alerts.
+
